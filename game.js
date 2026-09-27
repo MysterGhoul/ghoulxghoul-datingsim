@@ -544,7 +544,7 @@ async function startHunt() {
   $$('#roomnav .roomb').forEach(b => {
     b.onclick = () => { SFX.room(); showRoom(+b.dataset.r); };
   });
-  say(`Twenty minutes, babe. Check every room!`);
+  say(`Twenty minutes, babe. Check every room!`, 'sleepy');
   showRoom(0);
 
   S.huntStart = performance.now();
@@ -568,7 +568,36 @@ async function startHunt() {
   }, 100);
   await fade(false);
 }
-function say(html) { $('#huntsay-t').innerHTML = html; }
+let sayTimer = null;
+function say(html, mood, kind) {
+  $('#huntsay-t').innerHTML = html;
+  if (mood) setFace(mood, kind);
+  const box = $('.huntsay'), face = $('#huntface');
+  box.classList.remove('gone');
+  face.classList.remove('gone');
+  clearTimeout(sayTimer);
+  sayTimer = setTimeout(() => {                                   // she wanders off after 8s
+    box.classList.add('gone');
+    face.classList.add('gone');
+  }, 8000);
+}
+/* the little Jasmine portrait next to her hunt lines */
+function setFace(mood, kind) {
+  const img = $('#huntface-img'); if (!img) return;
+  const base = `stream_${MOODS.includes(mood) ? mood : 'neutral'}`;
+  if (img.dataset.f !== base) {
+    img.dataset.f = base;
+    img.dataset.ext = 'webp';
+    img.onerror = () => {
+      if (img.dataset.ext === 'webp') { img.dataset.ext = 'png'; img.src = `assets/jasmine/${base}.png`; }
+    };
+    img.src = `assets/jasmine/${base}.webp`;
+  }
+  const w = $('#huntface');
+  w.classList.remove('good', 'bad');
+  if (kind) w.classList.add(kind);
+  w.classList.remove('pop'); void w.offsetWidth; w.classList.add('pop');
+}
 
 function showRoom(i) {
   S.room = i;
@@ -610,7 +639,7 @@ function wrongItem(id, btn) {
   btn.classList.add('wrong');
   setTimeout(() => btn.classList.remove('wrong'), 600);
   flash('NOT IT', 'meh');
-  say(DECOYS[id].line);
+  say(DECOYS[id].line, 'annoyed', 'bad');
 }
 
 function grab(id, btn) {
@@ -621,8 +650,8 @@ function grab(id, btn) {
   li.querySelector('.box').innerHTML = '&#10003;';
   S.found[id] = true;
   const left = totalTargets() - Object.keys(S.found).length;
-  if (id === 'wig') say(`THE WIG! Okay, goth day is SAVED. ${left} to go.`);
-  else if (left > 0) say(HUNT_LINES[HUNT_LINES.length - left] || `Keep going!`);
+  if (id === 'wig') say(`THE WIG! Okay, goth day is SAVED. ${left} to go.`, 'flirty', 'good');
+  else if (left > 0) say(HUNT_LINES[HUNT_LINES.length - left] || `Keep going!`, 'happy', 'good');
   if (left === 0) finishHunt();
 }
 
@@ -643,7 +672,8 @@ async function finishHunt() {
   const verdict = t < 40 ? `That was FAST. Okay. I am impressed and a little turned on.`
     : t < 85 ? `Good enough. Barely. Plug it all in, we are live in four.`
     : `Took you long enough. I have already apologised to chat twice.`;
-  say(`<b style="display:inline;color:#ffd166">+${pts} RIZZ</b> &nbsp;${verdict}`);
+  say(`<b style="display:inline;color:#ffd166">+${pts} RIZZ</b> &nbsp;${verdict}`,
+      t < 40 ? 'flirty' : 'happy', 'good');
   (t < 40 ? SFX.good : SFX.meh)();
   flash(t < 40 ? 'SPEEDRUN' : t < 85 ? 'GOT IT' : 'FINALLY', t < 85 ? 'great' : 'meh');
   await new Promise(r => setTimeout(r, 2600));
@@ -661,7 +691,8 @@ async function timeUp() {
   const missing = Object.keys(ITEMS).filter(k => !S.found[k]).map(k => ITEMS[k].name.toLowerCase());
   SFX.bad();
   flash("TIME'S UP", 'bad');
-  say(`<b style="display:inline;color:#ff5a62">TIME</b> &nbsp;...That's twenty minutes. I have to go live.`);
+  say(`<b style="display:inline;color:#ff5a62">TIME</b> &nbsp;...That's twenty minutes. I have to go live.`,
+      'annoyed', 'bad');
   await new Promise(r => setTimeout(r, 2200));
   gameOver(`The clock hit zero with <b style="color:#ff99a0">${N - n}</b> thing${N - n === 1 ? '' : 's'}
     still missing — no ${missing.join(', no ')}.<br><br>
@@ -677,6 +708,7 @@ function clearCut() {
 }
 
 async function startCut() {
+  clearTimeout(sayTimer);
   await fade(true);
   go('s-cut'); hud(false);
   stopMusic(600);

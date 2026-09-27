@@ -153,11 +153,25 @@ body{display:grid;place-items:center}
   display:grid;place-items:center;font-size:12px;color:#fff}
 .list li.done{color:#5f5f6c;text-decoration:line-through}
 .list li.done .box{background:var(--red);border-color:var(--red)}
-.huntsay{position:absolute;left:24px;bottom:24px;z-index:12;max-width:520px;background:rgba(9,9,12,.9);
-  border:2px solid #000;border-left:5px solid var(--red);border-radius:12px;padding:14px 18px;
-  font-size:17px;line-height:1.4;color:#eee}
+.huntsay{position:absolute;left:24px;bottom:24px;z-index:12;max-width:560px;background:rgba(9,9,12,.9);
+  border:2px solid #000;border-left:5px solid var(--red);border-radius:12px;padding:12px 18px 12px 12px;
+  font-size:17px;line-height:1.4;color:#eee;display:flex;align-items:center;gap:14px;
+  transition:opacity .5s ease,transform .5s ease}
+.huntsay.gone{opacity:0;transform:translateY(14px);pointer-events:none}
 .huntsay b{color:var(--red-lt);font-family:'Titan One',sans-serif;font-size:13px;letter-spacing:.1em;
   display:block;margin-bottom:3px}
+.huntsay-txt{flex:1;min-width:0}
+/* her cut-out leans in above the caption; the caption overlaps her waist */
+.huntface{position:absolute;left:14px;bottom:46px;height:252px;z-index:11;
+  pointer-events:none;transform-origin:50% 100%;
+  transition:opacity .5s ease,transform .5s ease}
+.huntface img{height:100%;width:auto;display:block;
+  filter:drop-shadow(0 8px 22px rgba(0,0,0,.85)) drop-shadow(0 0 16px rgba(229,9,20,.25))}
+.huntface.pop{animation:facepop .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes facepop{0%{transform:translateY(16px) scale(.9)}60%{transform:translateY(-4px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+.huntface.gone{opacity:0;transform:translateY(22px) scale(.96);pointer-events:none}
+.huntface.bad img{filter:drop-shadow(0 8px 22px rgba(0,0,0,.85)) drop-shadow(0 0 20px rgba(255,90,98,.5))}
+.huntface.good img{filter:drop-shadow(0 8px 22px rgba(0,0,0,.85)) drop-shadow(0 0 20px rgba(92,224,138,.45))}
 .miss-x{position:absolute;z-index:30;pointer-events:none;font-size:30px;animation:mx .55s forwards;color:var(--red)}
 @keyframes mx{0%{opacity:1;transform:translate(-50%,-50%) scale(.4)}100%{opacity:0;transform:translate(-50%,-160%) scale(1.1)}}
 
@@ -289,7 +303,10 @@ body{display:grid;place-items:center}
       <h3>&#9654; Stream Check</h3>
       <ul id="checklist"></ul>
     </div>
-    <div class="huntsay"><b>Jasmine</b><span id="huntsay-t">Twenty minutes, babe. Go.</span></div>
+    <div class="huntface" id="huntface"><img id="huntface-img" alt=""></div>
+    <div class="huntsay">
+      <div class="huntsay-txt"><b>Jasmine</b><span id="huntsay-t">Twenty minutes, babe. Go.</span></div>
+    </div>
     <div id="roomnav"></div>
   </section>
 
