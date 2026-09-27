@@ -1,6 +1,6 @@
 HOW WE BUILD / UPDATE THE DATING SIM
 =====================================
-Live at: https://datingsim.ghoulxghoul.com   (once the DNS record below is added)
+Live at: https://dating.ghoulxghoul.com   (once the DNS record below is added)
 Until then: https://mysterghoul.github.io/ghoulxghoul-datingsim/
 
 WHAT IT IS
@@ -11,7 +11,7 @@ WHAT IT IS
 
 HOSTING
 - GitHub Pages, repo MysterGhoul/ghoulxghoul-datingsim, branch main, /root.
-- Custom domain will be datingsim.ghoulxghoul.com via a CNAME file.
+- Custom domain will be dating.ghoulxghoul.com via a CNAME file.
 - DNS is at Squarespace (same place as the lore site).
 - Push = auto-deploy (git credential manager handles auth).
 
@@ -22,12 +22,12 @@ HOSTING
 
 TO FINISH THE CUSTOM DOMAIN (one-time, needs a human)
 1. Squarespace DNS for ghoulxghoul.com -> add a record:
-      Type: CNAME     Host: datingsim     Value: mysterghoul.github.io
+      Type: CNAME     Host: dating     Value: mysterghoul.github.io
 2. Then here:
       cd "C:\Users\MysterGhoul\Documents\GhoulxGhoulGame"
       mv CNAME.pending CNAME
       git add CNAME && git commit -m "custom domain" && git push
-3. GitHub repo -> Settings -> Pages -> Custom domain -> datingsim.ghoulxghoul.com,
+3. GitHub repo -> Settings -> Pages -> Custom domain -> dating.ghoulxghoul.com,
    then tick "Enforce HTTPS" once the cert issues (can take ~15 min).
    (The CNAME file is held back until DNS exists, because with it committed the
    github.io URL 301-redirects to a domain that would not resolve yet.)
@@ -87,7 +87,7 @@ STILL TO DO
   public-domain product shot exists). Shoot the real ones on the white sheet and
   cut them out to match.
 - The stream clip is unbleeped.
-- Navigation from the Fourthwall homepage over to datingsim.ghoulxghoul.com.
+- Navigation from the Fourthwall homepage over to dating.ghoulxghoul.com.
 
 LICENSING
 - Backgrounds: public domain / CC0. Item photos: CC0 or CC BY.
