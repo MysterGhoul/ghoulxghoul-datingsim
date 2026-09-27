@@ -863,11 +863,28 @@ function confetti() {
     c.appendChild(d);
   }
 }
-const replayBtns = `<div class="endbtns"><button class="btn" id="againBtn">Play Again</button></div>`;
+const TWITCH = 'https://twitch.tv/ghoulxghoul';
+const TIPURL = 'https://ghoulxghoul.com/donation/?donor=&amp;message=&amp;amount-radio=5.00'
+             + '&amp;donationOpts%5B%5D=5.00&amp;donationOpts%5B%5D=10.00&amp;donationOpts%5B%5D=25.00'
+             + '&amp;amount-custom=&amp;amount=5&amp;currency=USD';
+const TWITCH_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.265 3 2.5 6.53v14.47h5.294V24h2.647l2.647-3h4.412L21.5 16.294V3H4.265Zm2.647 1.765h12.353v10.588l-3.53 3.53h-4.411L8.676 21.88v-3H6.912V4.765Zm4.412 3.53v5.293h1.764V8.294h-1.764Zm4.412 0v5.293h1.764V8.294h-1.764Z"/></svg>`;
+
+/* every ending: play again, then the plug */
+const replayBtns = `
+  <div class="endbtns"><button class="btn" id="againBtn">Play Again</button></div>
+  <div class="outro">
+    <div class="outro-l">She does this <b>live</b>, most nights, for real.<br>
+      Come heckle her in chat &mdash; or throw her a couple of bucks for the trouble.</div>
+    <div class="endbtns">
+      <a class="btn tw" href="${TWITCH}" target="_blank" rel="noopener noreferrer">${TWITCH_ICON} Watch Live</a>
+      <a class="btn tip" href="${TIPURL}" target="_blank" rel="noopener noreferrer">&#9829; Leave a Tip</a>
+    </div>
+  </div>`;
 
 async function showEnd(html, withConfetti) {
   hud(false);
   stopMusic(900);
+  $('#flash').classList.remove('go');      // never let a flash word sit over an ending
   $('#endin').innerHTML = html;
   $('#confetti').innerHTML = '';
   go('s-end');

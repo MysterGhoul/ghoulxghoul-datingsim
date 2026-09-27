@@ -245,7 +245,22 @@ body{display:grid;place-items:center}
 .scoreline{font-size:16px;color:#8d8d9b;letter-spacing:.1em;margin:22px 0 6px;text-transform:uppercase;font-weight:800}
 .scorenum{font-family:'Titan One',sans-serif;font-size:56px;color:var(--gold);text-shadow:0 0 30px rgba(255,209,102,.5)}
 .endnote{font-size:15px;color:#77778a;margin-top:10px;line-height:1.6;max-width:600px;margin-left:auto;margin-right:auto}
-.endbtns{margin-top:30px;display:flex;gap:12px;justify-content:center}
+.endbtns{margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* outro plug - twitch + tip */
+.outro{margin-top:30px;padding-top:24px;border-top:1px solid #23232c;max-width:620px;
+  margin-left:auto;margin-right:auto}
+.outro-l{font-size:15px;color:#9a9aa8;letter-spacing:.04em;margin-bottom:15px;line-height:1.55}
+.outro-l b{color:#fff;font-weight:800}
+.outro .endbtns{margin-top:0}
+a.btn{display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-size:16px;
+  padding:13px 24px;border-bottom-width:4px}
+a.btn svg{width:18px;height:18px;fill:currentColor;flex:none}
+.btn.tw{background:#9146FF;border-bottom-color:#5c26b3;box-shadow:0 6px 26px rgba(145,70,255,.45)}
+.btn.tw:hover{box-shadow:0 10px 34px rgba(145,70,255,.65)}
+.btn.tip{background:var(--gold);color:#1a1405;border-bottom-color:#b8913f;
+  box-shadow:0 6px 26px rgba(255,209,102,.4)}
+.btn.tip:hover{box-shadow:0 10px 34px rgba(255,209,102,.6)}
 .fader{position:absolute;inset:0;background:#000;z-index:70;opacity:0;pointer-events:none;transition:opacity .9s}
 .fader.on{opacity:1;pointer-events:auto}
 .confetti{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
