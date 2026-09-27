@@ -1,0 +1,97 @@
+HOW WE BUILD / UPDATE THE DATING SIM
+=====================================
+Live at: https://datingsim.ghoulxghoul.com   (once the DNS record below is added)
+Until then: https://mysterghoul.github.io/ghoulxghoul-datingsim/
+
+WHAT IT IS
+- "Mission: GhoulxGhoul Gets Laid" - a browser dating sim.
+- Two files of code: index.html (all CSS inline) + game.js (all content + logic).
+  No build step, no framework, no server code.
+- Everything else is in assets/.
+
+HOSTING
+- GitHub Pages, repo MysterGhoul/ghoulxghoul-datingsim, branch main, /root.
+- Custom domain will be datingsim.ghoulxghoul.com via a CNAME file.
+- DNS is at Squarespace (same place as the lore site).
+- Push = auto-deploy (git credential manager handles auth).
+
+⚠ WHY NOT ghoulxghoul.com/datingsim
+- ghoulxghoul.com is served by Fourthwall (the merch platform). We cannot drop a
+  multi-file JS game at a path there. Same reason the lore site lives at
+  lore.ghoulxghoul.com. Subdomain is the pattern for anything we build ourselves.
+
+TO FINISH THE CUSTOM DOMAIN (one-time, needs a human)
+1. Squarespace DNS for ghoulxghoul.com -> add a record:
+      Type: CNAME     Host: datingsim     Value: mysterghoul.github.io
+2. Then here:
+      cd "C:\Users\MysterGhoul\Documents\GhoulxGhoulGame"
+      mv CNAME.pending CNAME
+      git add CNAME && git commit -m "custom domain" && git push
+3. GitHub repo -> Settings -> Pages -> Custom domain -> datingsim.ghoulxghoul.com,
+   then tick "Enforce HTTPS" once the cert issues (can take ~15 min).
+   (The CNAME file is held back until DNS exists, because with it committed the
+   github.io URL 301-redirects to a domain that would not resolve yet.)
+
+TO EDIT + DEPLOY (the whole loop)
+1. Edit index.html / game.js / assets
+2. Test locally FIRST - you cannot open index.html directly, browsers block it:
+      cd "C:\Users\MysterGhoul\Documents\GhoulxGhoulGame" && python -m http.server 8777
+      -> http://127.0.0.1:8777
+3. git commit -am "what changed"
+4. git push
+5. Wait ~60-120s, hard-refresh, confirm.
+
+WHERE THE CONTENT LIVES (all plain data at the top of game.js)
+- INTRO              the opening question
+- ITEMS / DECOYS     what to find, and the joke items
+- ROOMS              which room holds what, x/y are % of the screen
+- NARR               cutscene narration, [ms, "line"]
+- ROLLS              the sushi menu
+- DATE               every question on the date
+- MUSIC / SFXFILE    audio paths
+
+A dialog option:
+  { t: `What you say`, p: 4, fx: ['SMOOTH','good'], mood: 'happy', r: `What she says back` }
+  p = points | h:1 costs a heart | end:'...' is an instant Game Over
+  mood picks the photo | fx is the flash word (great gold / good green / meh grey / bad red)
+  MAX recalculates itself, so add or remove questions freely.
+
+TUNING KNOBS
+- GOAL        70    % of the rizz meter needed to win
+- HUNT_LIMIT  120   seconds on the hunt clock
+- HUNT_FULL   40    finish inside this for full hunt marks
+- MUS_VOL     0.16  background music level
+
+SPRITES
+- assets/jasmine/{stream,date}_{neutral,happy,annoyed,flirty}.png  + stream_sleepy
+  stream_* = white shirt (intro + cutscene). date_* = black dress (the date).
+- Shipped as .webp (10x smaller). The code tries .webp then falls back to .png,
+  so you can drop in a .png replacement with the same name and it just works.
+- Cut out of the white-backdrop shoot with `rembg` (pip install rembg).
+  To redo one:
+    python -c "from rembg import remove,new_session; from PIL import Image; \
+      im=Image.open('SRC.jpg'); im.thumbnail((1200,1600)); \
+      o=remove(im,session=new_session('u2net'),alpha_matting=True); \
+      o.crop(o.getbbox()).save('out.webp','WEBP',quality=82,method=6)"
+
+AUDIO
+- 3 music loops, one per scene, crossfaded. Each is a true seamless loop (tail
+  crossfaded into the head) so it does not click on repeat.
+- Browsers refuse audio before a real gesture, so the title track starts on the
+  first click or keypress. That is a browser rule, not a bug.
+- _music_options/ is the audition page used to pick tracks. It is gitignored -
+  it is a workbench, not part of the site.
+
+STILL TO DO
+- Selfie stick + stream phone are hand-drawn vector, not photos (no usable
+  public-domain product shot exists). Shoot the real ones on the white sheet and
+  cut them out to match.
+- The stream clip is unbleeped.
+- Navigation from the Fourthwall homepage over to datingsim.ghoulxghoul.com.
+
+LICENSING
+- Backgrounds: public domain / CC0. Item photos: CC0 or CC BY.
+- Music: title + pre-stream are CC0. Sushi bar is "Guzheng City" by Kevin MacLeod
+  (incompetech.com), CC BY 4.0 -> the credit line on the title screen covers it.
+  If that track ever changes, check whether the credit line still needs to be there.
+- The stream clip and the two win stings are our own files.

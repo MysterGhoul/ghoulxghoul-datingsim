@@ -508,8 +508,8 @@ function waitClick(screenId) {
 $('#startBtn').onclick = async () => {
   audio(); SFX.click();
   reset(); drawHearts(); drawBar();
+  await fade(true);          // title track keeps playing through the fade
   playMusic('ready');
-  await fade(true);
   go('s-intro'); hud(true);
   await fade(false);
   runIntro();
@@ -927,13 +927,17 @@ addEventListener('keydown', e => {
 /* ---------- boot ---------- */
 reset(); drawHearts(); drawBar();
 $('#muteBtn').onclick = e => { e.stopPropagation(); toggleMute(); };
-/* first gesture unlocks audio; skip it when they go straight into the game */
-const kickTitle = e => {
-  if (e.target && e.target.closest && e.target.closest('#startBtn')) return;
-  if (!musKey && current === 's-title') playMusic('title');
+/* Browsers refuse to play audio until the page has had a real gesture, so the
+   title track starts on the first click/keypress. Try it on load anyway - that
+   succeeds for anyone whose browser already trusts the site. */
+playMusic('title');
+const kickTitle = () => {
+  if (current === 's-title') playMusic('title');
   removeEventListener('pointerdown', kickTitle);
+  removeEventListener('keydown', kickTitle);
 };
 addEventListener('pointerdown', kickTitle);
+addEventListener('keydown', kickTitle);
 buildJas($('#jas-intro')); buildJas($('#jas-date'));
 setMood($('#jas-intro'), 'stream', 'sleepy');
 setMood($('#jas-date'), 'date', 'neutral');
