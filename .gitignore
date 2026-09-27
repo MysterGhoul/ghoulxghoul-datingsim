@@ -1,0 +1,4 @@
+_music_options/
+*.pyc
+__pycache__/
+CNAME.pending
