@@ -171,7 +171,7 @@ function loseHeart() {
 }
 
 /* ---------- Jasmine sprite ---------- */
-const MOODS = ['neutral', 'happy', 'annoyed', 'flirty'];
+const MOODS = ['neutral', 'happy', 'annoyed', 'flirty', 'sleepy'];
 function buildJas(el) {
   el.innerHTML = `<img alt=""><span class="ph"></span>`;
   const img = el.querySelector('img');
@@ -209,7 +209,7 @@ function flash(word, kind = 'good') {
    1. INTRO
    ============================================================ */
 const INTRO = {
-  mood: 'annoyed',
+  mood: 'sleepy',
   say: `Babe. <em>Babe.</em> We go live in twenty minutes, it's <em>GOTH DAY</em> — I promised chat
         goth day — and I cannot find a single thing I need. Phone, battery, cable, selfie stick,
         and my black wig. Help me get ready for the stream?`,
@@ -935,5 +935,5 @@ const kickTitle = e => {
 };
 addEventListener('pointerdown', kickTitle);
 buildJas($('#jas-intro')); buildJas($('#jas-date'));
-setMood($('#jas-intro'), 'stream', 'annoyed');
+setMood($('#jas-intro'), 'stream', 'sleepy');
 setMood($('#jas-date'), 'date', 'neutral');
