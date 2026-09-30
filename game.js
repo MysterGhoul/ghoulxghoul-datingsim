@@ -1016,6 +1016,7 @@ addEventListener('keydown', e => {
 /* ---------- boot ---------- */
 reset(); drawHearts(); drawBar();
 $('#muteBtn').onclick = e => { e.stopPropagation(); toggleMute(); };
+if (/[?&]day2/.test(location.search)) setUnlocked();   // ?day2 in the URL = skip button, no console needed
 const d2b = $('#day2Btn');
 if (d2b) { if (unlocked()) d2b.style.display = 'inline-block'; d2b.onclick = () => { audio(); SFX.click(); startDay2(); }; }
 /* Browsers refuse to play audio until the page has had a real gesture, so the
