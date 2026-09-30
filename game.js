@@ -62,6 +62,8 @@ const MUSIC = {
   title: 'assets/music/title.mp3',   // menu
   ready: 'assets/music/getready.mp3',// intro + hidden object
   sushi: 'assets/music/sushi.mp3',   // the date
+  wake:  'assets/music/wake.mp3',    // day 2 morning
+  walk:  'assets/music/walk.mp3',    // mochi's walk
 };
 const MUS_VOL = 0.16;                     // background level - deliberately low
 let musA = null, musB = null, musCur = null, musKey = null, musMuted = false;
@@ -140,15 +142,21 @@ function toggleMute() {
 const GOAL = 70;                  // % of the rizz meter needed to win
 let S = {};
 function reset() {
-  S = { score: 0, hearts: 3, huntStart: 0, found: {}, roll: null, node: 0, room: 0 };
+  S = { score: 0, hearts: 3, huntStart: 0, huntPausedMs: 0, huntPauseAt: null, found: {}, roll: null, node: 0, room: 0, day: 1 };
+  MAX = MAX1;
 }
-let MAX = 0;
+let MAX = 0, MAX1 = 0;
+const unlocked = () => { try { return localStorage.getItem('gxg_day2') === '1'; } catch (e) { return false; } };
+const setUnlocked = () => { try { localStorage.setItem('gxg_day2', '1'); } catch (e) {} };
 
 let current = 's-title';
 function go(id) {
   $('#' + current)?.classList.remove('on');
   $('#' + id).classList.add('on');
   current = id;
+  if (id === 's-title') {                  // the Day 2 shortcut appears once Day 1 has been won
+    const d2 = $('#day2Btn'); if (d2) d2.style.display = unlocked() ? 'inline-block' : 'none';
+  }
 }
 function fade(on) {
   return new Promise(res => { $('#fader').classList.toggle('on', on); setTimeout(res, 950); });
@@ -166,7 +174,7 @@ function drawBar() { $('#barfill').style.width = Math.min(100, pct()) + '%'; }
 function addScore(n) { S.score = Math.max(0, S.score + n); drawBar(); }
 function loseHeart() {
   S.hearts--; drawHearts(S.hearts); drawBar();
-  if (S.hearts <= 0) { setTimeout(() => endDumped(), 900); return true; }
+  if (S.hearts <= 0) { setTimeout(() => (S.day === 2 ? day2Dumped() : endDumped()), 900); return true; }
   return false;
 }
 
@@ -470,8 +478,9 @@ const DATE = [
     ] },
 ];
 
-MAX = 10 + HUNT_MAX + Math.max(...ROLLS.map(r => r.p))
+MAX1 = 10 + HUNT_MAX + Math.max(...ROLLS.map(r => r.p))
     + DATE.filter(n => !n.order).reduce((a, n) => a + Math.max(...n.opts.map(o => o.p || 0)), 0);
+MAX = MAX1;
 
 /* ============================================================
    RENDERING
@@ -525,49 +534,22 @@ function runIntro() {
     flash(o.fx[0], o.fx[1]);
     renderDialog($('#intro-box'), 'Jasmine', o.r, null);
     await waitClick('s-intro');
-    startHunt();
+    startHunt(HUNT_D1);
   });
 }
 
-/* ---------- hunt ---------- */
-let huntTimer = null;
-const totalTargets = () => ROOMS.reduce((a, r) => a + r.place.filter(p => p.k).length, 0);
-
-async function startHunt() {
-  await fade(true);
-  go('s-hunt');
-  S.found = {}; S.room = 0;
-  $('#checklist').innerHTML = Object.entries(ITEMS).map(([k, it]) =>
-    `<li data-i="${k}"><span class="box"></span>${it.name}</li>`).join('');
-  $('#roomnav').innerHTML = ROOMS.map((r, i) =>
-    `<button class="roomb ${i === 0 ? 'on' : ''}" data-r="${i}">${r.name}</button>`).join('');
-  $$('#roomnav .roomb').forEach(b => {
-    b.onclick = () => { SFX.room(); showRoom(+b.dataset.r); };
-  });
-  say(`Twenty minutes, babe. Check every room!`, 'sleepy');
-  showRoom(0);
-
-  S.huntStart = performance.now();
-  S.huntOver = false;
-  clearInterval(huntTimer);
-  huntTimer = setInterval(() => {
-    const t = (performance.now() - S.huntStart) / 1000;
-    const left = Math.max(0, HUNT_LIMIT - t);
-    const c = $('#clock');
-    c.textContent = `${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
-    c.classList.toggle('warn', left <= 30);
-    c.classList.toggle('crit', left <= 10);
-    if (left <= 10 && left > 0 && Math.floor(left * 2) !== S.lastTick) {
-      S.lastTick = Math.floor(left * 2);
-      tone(left <= 5 ? 1100 : 820, .05, 'square', .04);
-    }
-    const n = Object.keys(S.found).length;
-    const live = Math.round(HUNT_MAX * huntFactor(t) * (n / totalTargets()));
-    $('#barfill').style.width = Math.min(100, Math.round((S.score + live) / MAX * 100)) + '%';
-    if (left <= 0 && !S.huntOver) timeUp();
-  }, 100);
-  await fade(false);
+/* ---------- hunt (shared by Day 1 and Day 2 via a config) ---------- */
+let huntTimer = null, HC = null;
+const totalTargets = () => HC.rooms.reduce((a, r) => a + r.place.filter(p => p.k).length, 0);
+function huntElapsed() {
+  const open = S.huntPauseAt ? performance.now() - S.huntPauseAt : 0;
+  return (performance.now() - S.huntStart - S.huntPausedMs - open) / 1000;
 }
+function pauseHunt()  { if (!S.huntPauseAt) S.huntPauseAt = performance.now(); }
+function resumeHunt() { if (S.huntPauseAt) { S.huntPausedMs += performance.now() - S.huntPauseAt; S.huntPauseAt = null; } }
+function abortHunt()  { clearInterval(huntTimer); S.huntOver = true; }
+
+/* her caption + cut-out in the corner; both fade 8s after the last line */
 let sayTimer = null;
 function say(html, mood, kind) {
   $('#huntsay-t').innerHTML = html;
@@ -576,12 +558,11 @@ function say(html, mood, kind) {
   box.classList.remove('gone');
   face.classList.remove('gone');
   clearTimeout(sayTimer);
-  sayTimer = setTimeout(() => {                                   // she wanders off after 8s
+  sayTimer = setTimeout(() => {
     box.classList.add('gone');
     face.classList.add('gone');
   }, 8000);
 }
-/* the little Jasmine portrait next to her hunt lines */
 function setFace(mood, kind) {
   const img = $('#huntface-img'); if (!img) return;
   const base = `stream_${MOODS.includes(mood) ? mood : 'neutral'}`;
@@ -599,35 +580,66 @@ function setFace(mood, kind) {
   w.classList.remove('pop'); void w.offsetWidth; w.classList.add('pop');
 }
 
+async function startHunt(cfg) {
+  HC = cfg;
+  await fade(true);
+  go('s-hunt'); hud(true);
+  if (HC.music) playMusic(HC.music);
+  S.found = {}; S.room = 0;
+  $('#checklist').innerHTML = Object.entries(HC.items).map(([k, it]) =>
+    `<li data-i="${k}"><span class="box"></span>${it.name}</li>`).join('');
+  $('#roomnav').innerHTML = HC.rooms.map((r, i) =>
+    `<button class="roomb ${i === 0 ? 'on' : ''}" data-r="${i}">${r.name}</button>`).join('');
+  $$('#roomnav .roomb').forEach(b => { b.onclick = () => { SFX.room(); showRoom(+b.dataset.r); }; });
+  $('#hunt-dlg').classList.remove('on');
+  say(HC.intro, HC.introMood || 'sleepy');
+  showRoom(0);
+
+  S.huntStart = performance.now(); S.huntPausedMs = 0; S.huntPauseAt = null; S.huntOver = false;
+  clearInterval(huntTimer);
+  huntTimer = setInterval(() => {
+    if (S.huntOver) return;
+    const t = huntElapsed();
+    const left = Math.max(0, HUNT_LIMIT - t);
+    const c = $('#clock');
+    c.textContent = `${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
+    c.classList.toggle('warn', left <= 30);
+    c.classList.toggle('crit', left <= 10);
+    if (left <= 10 && left > 0 && !S.huntPauseAt && Math.floor(left * 2) !== S.lastTick) {
+      S.lastTick = Math.floor(left * 2);
+      tone(left <= 5 ? 1100 : 820, .05, 'square', .04);
+    }
+    const n = Object.keys(S.found).length;
+    const live = Math.round((HC.speedPts ?? HUNT_MAX) * huntFactor(t) * (n / totalTargets()));
+    $('#barfill').style.width = Math.min(100, Math.round((S.score + live) / MAX * 100)) + '%';
+    if (left <= 0) timeUp();
+  }, 100);
+  await fade(false);
+}
+
 function showRoom(i) {
   S.room = i;
-  const room = ROOMS[i];
+  const room = HC.rooms[i];
   $('#huntbg').style.backgroundImage = `url('${room.bg}')`;
   $$('#roomnav .roomb').forEach((b, j) => b.classList.toggle('on', j === i));
-
   const field = $('#huntfield');
   field.innerHTML = '';
   room.place.forEach(p => {
-    if (p.k && S.found[p.k]) return;                 // already collected
-    const def = p.k ? ITEMS[p.k] : DECOYS[p.d];
+    if (p.k && S.found[p.k]) return;
+    const def = p.k ? HC.items[p.k] : DECOYS[p.d];
     const b = document.createElement('button');
     b.className = 'obj';
     b.style.left = p.x + '%'; b.style.top = p.y + '%';
     b.style.setProperty('--s', p.s);
-    b.innerHTML = def.img
-      ? `<img src="${def.img}" style="width:${(def.w || 80)}px" alt="">`
-      : def.svg;
-    b.onclick = e => {
-      e.stopPropagation();
-      if (p.k) grab(p.k, b); else wrongItem(p.d, b);
-    };
+    b.innerHTML = def.img ? `<img src="${def.img}" style="width:${(def.w || 80)}px" alt="">` : def.svg;
+    b.onclick = e => { e.stopPropagation(); if (p.k) grab(p.k, b); else wrongItem(p.d, b); };
     field.appendChild(b);
   });
   field.onclick = e => {
     SFX.nope();
     const r = stage.getBoundingClientRect(), sc = r.width / 1280;
     const m = document.createElement('div');
-    m.className = 'miss-x'; m.textContent = '✗';
+    m.className = 'miss-x'; m.textContent = '\u2717';
     m.style.left = (e.clientX - r.left) / sc + 'px';
     m.style.top  = (e.clientY - r.top) / sc + 'px';
     field.appendChild(m); setTimeout(() => m.remove(), 600);
@@ -642,7 +654,8 @@ function wrongItem(id, btn) {
   say(DECOYS[id].line, 'annoyed', 'bad');
 }
 
-function grab(id, btn) {
+async function grab(id, btn) {
+  if (S.huntOver) return;
   SFX.found();
   btn.classList.add('got');
   const li = $(`#checklist li[data-i="${id}"]`);
@@ -650,8 +663,8 @@ function grab(id, btn) {
   li.querySelector('.box').innerHTML = '&#10003;';
   S.found[id] = true;
   const left = totalTargets() - Object.keys(S.found).length;
-  if (id === 'wig') say(`THE WIG! Okay, goth day is SAVED. ${left} to go.`, 'flirty', 'good');
-  else if (left > 0) say(HUNT_LINES[HUNT_LINES.length - left] || `Keep going!`, 'happy', 'good');
+  if (HC.onFound) await HC.onFound(id, left);
+  if (S.huntOver) return;
   if (left === 0) finishHunt();
 }
 
@@ -665,22 +678,23 @@ async function finishHunt() {
   if (S.huntOver) return;
   S.huntOver = true;
   clearInterval(huntTimer);
-  const t = (performance.now() - S.huntStart) / 1000;
-  const pts = Math.round(HUNT_MAX * huntFactor(t));
+  const t = huntElapsed();
+  const budget = HC.speedPts ?? HUNT_MAX;
+  const pts = Math.round(budget * huntFactor(t));
   addScore(pts);
   $('#clock').classList.remove('warn', 'crit');
-  const verdict = t < 40 ? `That was FAST. Okay. I am impressed and a little turned on.`
-    : t < 85 ? `Good enough. Barely. Plug it all in, we are live in four.`
-    : `Took you long enough. I have already apologised to chat twice.`;
-  say(`<b style="display:inline;color:#ffd166">+${pts} RIZZ</b> &nbsp;${verdict}`,
-      t < 40 ? 'flirty' : 'happy', 'good');
+  const [verdict, mood] = HC.verdict ? HC.verdict(t)
+    : [t < 40 ? `That was FAST. Okay. I am impressed and a little turned on.`
+     : t < 85 ? `Good enough. Barely. Plug it all in, we are live in four.`
+     : `Took you long enough. I have already apologised to chat twice.`, t < 40 ? 'flirty' : 'happy'];
+  say((budget ? `<b style="display:inline;color:#ffd166">+${pts} RIZZ</b> &nbsp;` : '') + verdict, mood, 'good');
   (t < 40 ? SFX.good : SFX.meh)();
   flash(t < 40 ? 'SPEEDRUN' : t < 85 ? 'GOT IT' : 'FINALLY', t < 85 ? 'great' : 'meh');
   await new Promise(r => setTimeout(r, 2600));
-  startCut();
+  HC.onDone(pts, t);
 }
 
-/* clock hit 0:00 without everything -> run over */
+/* clock hit 0:00 without everything */
 async function timeUp() {
   if (S.huntOver) return;
   S.huntOver = true;
@@ -688,17 +702,29 @@ async function timeUp() {
   $('#clock').textContent = '0:00';
   $('#clock').classList.remove('warn', 'crit');
   const n = Object.keys(S.found).length, N = totalTargets();
-  const missing = Object.keys(ITEMS).filter(k => !S.found[k]).map(k => ITEMS[k].name.toLowerCase());
+  const missing = Object.keys(HC.items).filter(k => !S.found[k]).map(k => HC.items[k].name.toLowerCase());
   SFX.bad();
   flash("TIME'S UP", 'bad');
-  say(`<b style="display:inline;color:#ff5a62">TIME</b> &nbsp;...That's twenty minutes. I have to go live.`,
-      'annoyed', 'bad');
+  say(`<b style="display:inline;color:#ff5a62">TIME</b> &nbsp;${HC.timeUpLine}`, 'annoyed', 'bad');
   await new Promise(r => setTimeout(r, 2200));
-  gameOver(`The clock hit zero with <b style="color:#ff99a0">${N - n}</b> thing${N - n === 1 ? '' : 's'}
-    still missing — no ${missing.join(', no ')}.<br><br>
-    She went live anyway, in her own hair, on goth day, holding a phone at eleven percent.
-    Chat noticed. Chat <em>always</em> notices. There was no sushi.`);
+  HC.onTimeUp(missing, n, N);
 }
+
+/* Day 1's hunt */
+const HUNT_D1 = {
+  rooms: ROOMS, items: ITEMS, music: 'ready',
+  intro: `Twenty minutes, babe. Check every room!`, introMood: 'sleepy',
+  onFound: (id, left) => {
+    if (id === 'wig') say(`THE WIG! Okay, goth day is SAVED. ${left} to go.`, 'flirty', 'good');
+    else if (left > 0) say(HUNT_LINES[HUNT_LINES.length - left] || `Keep going!`, 'happy', 'good');
+  },
+  onDone: () => startCut(),
+  timeUpLine: `...That's twenty minutes. I have to go live.`,
+  onTimeUp: (missing, n, N) => gameOver(`The clock hit zero with <b style="color:#ff99a0">${N - n}</b> thing${N - n === 1 ? '' : 's'}
+    still missing &mdash; no ${missing.join(', no ')}.<br><br>
+    She went live anyway, in her own hair, on goth day, holding a phone at eleven percent.
+    Chat noticed. Chat <em>always</em> notices. There was no sushi.`),
+};
 
 /* ---------- cutscene ---------- */
 let cutTimers = [], cutIvs = [];
@@ -869,9 +895,8 @@ const TIPURL = 'https://ghoulxghoul.com/donation/?donor=&amp;message=&amp;amount
              + '&amp;amount-custom=&amp;amount=5&amp;currency=USD';
 const TWITCH_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.265 3 2.5 6.53v14.47h5.294V24h2.647l2.647-3h4.412L21.5 16.294V3H4.265Zm2.647 1.765h12.353v10.588l-3.53 3.53h-4.411L8.676 21.88v-3H6.912V4.765Zm4.412 3.53v5.293h1.764V8.294h-1.764Zm4.412 0v5.293h1.764V8.294h-1.764Z"/></svg>`;
 
-/* every ending: play again, then the plug */
-const replayBtns = `
-  <div class="endbtns"><button class="btn" id="againBtn">Play Again</button></div>
+/* the plug (twitch + tip) under every ending */
+const OUTRO = `
   <div class="outro">
     <div class="outro-l">She does this <b>live</b>, most nights, for real.<br>
       Come heckle her in chat &mdash; or throw her a couple of bucks for the trouble.</div>
@@ -880,6 +905,7 @@ const replayBtns = `
       <a class="btn tip" href="${TIPURL}" target="_blank" rel="noopener noreferrer">&#9829; Leave a Tip</a>
     </div>
   </div>`;
+const replayBtns = `<div class="endbtns"><button class="btn" id="againBtn">Play Again</button></div>` + OUTRO;
 
 async function showEnd(html, withConfetti) {
   hud(false);
@@ -900,14 +926,14 @@ async function showEnd(html, withConfetti) {
   };
 }
 async function gameOver(reason) {
-  clearInterval(huntTimer); clearCut();
+  abortHunt(); clearCut();
   await fade(true); SFX.lose();
   showEnd(`<div class="bigfail">Game Over</div>
     <div class="endnote" style="font-size:18px;color:#c9c9d6;margin-top:24px">${reason}</div>
     <div class="scoreline">Final Rizz</div><div class="scorenum">${pct()}%</div>${replayBtns}`, false);
 }
 async function endDumped() {
-  clearInterval(huntTimer);
+  abortHunt();
   await fade(true); SFX.lose();
   showEnd(`<div class="bigfail">She Left.</div>
     <div class="endnote" style="font-size:18px;color:#c9c9d6;margin-top:24px">
@@ -928,10 +954,15 @@ async function endWinOrLose() {
       </div>
       <div class="scoreline">Final Rizz</div><div class="scorenum">${p}%</div>${replayBtns}`, false);
   }
+  setUnlocked();
+  await winSequence(false);
+}
 
-  /* ---- WIN SEQUENCE ---- */
+/* fade -> hub sting -> "You win, big boy." -> fade -> either the Day 2 card or the real finale */
+async function winSequence(final) {
+  const p = pct();
   stopMusic(800);
-  await fade(true);                       // fade to black
+  await fade(true);
   hud(false);
   $('#endin').innerHTML = `<div class="endl" id="winline"></div>`;
   $('#confetti').innerHTML = '';
@@ -951,22 +982,31 @@ async function endWinOrLose() {
     await new Promise(r => setTimeout(r, 62));
   }
   await new Promise(r => setTimeout(r, 1400));
-
   await fade(true);
+
+  if (!final) {
+    await showEnd(`<div class="bigwin glowred" style="font-size:96px">Day 2<br>Unlocked</div>
+      <div class="scoreline">Day 1 Rizz</div><div class="scorenum">${p}%</div>
+      <div class="endnote">She's asleep on your arm. Tomorrow's the day off &mdash;
+        and Mochi has opinions about that.</div>
+      <div class="endbtns"><button class="btn" id="day2Go">Continue &rarr;</button></div>`, false);
+    $('#day2Go').onclick = () => { SFX.click(); startDay2(); };
+    return;
+  }
   playSfx('win2', 0.85);                  // 2. yamete kudasai, over the YOU WIN card
   await showEnd(`<div class="bigwin glowred">You<br>Win</div>
-    <div class="scoreline">Final Rizz</div><div class="scorenum">${p}%</div>
+    <div class="scoreline">Day 2 Rizz</div><div class="scorenum">${p}%</div>
     <div class="endnote">${
-      p >= 95 ? 'A flawless run. Genuinely upsetting to witness.'
-      : p >= 85 ? 'Comfortable. She never stood a chance.'
-      : 'You scraped it. She is choosing not to mention the Dragon Roll.'}</div>
+      p >= 95 ? 'A flawless day. Mochi is impressed. Mochi is never impressed.'
+      : p >= 85 ? 'Comfortable. She never stood a chance. Neither did the good sheets.'
+      : 'You scraped it. She is choosing not to mention the door hinge.'}</div>
     ${replayBtns}`, true);
 }
 
 /* ---------- keyboard ---------- */
 addEventListener('keydown', e => {
   if (e.key >= '1' && e.key <= '4') $$('.screen.on .ch')[+e.key - 1]?.click();
-  if (e.key === 'Enter' || e.key === ' ') $('.screen.on .btn')?.click();
+  if ((e.key === 'Enter' || e.key === ' ') && current !== 's-walk') $('.screen.on .btn')?.click();
   if (current === 's-hunt' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
     const d = e.key === 'ArrowRight' ? 1 : -1;
     SFX.room(); showRoom((S.room + d + ROOMS.length) % ROOMS.length);
@@ -976,6 +1016,8 @@ addEventListener('keydown', e => {
 /* ---------- boot ---------- */
 reset(); drawHearts(); drawBar();
 $('#muteBtn').onclick = e => { e.stopPropagation(); toggleMute(); };
+const d2b = $('#day2Btn');
+if (d2b) { if (unlocked()) d2b.style.display = 'inline-block'; d2b.onclick = () => { audio(); SFX.click(); startDay2(); }; }
 /* Browsers refuse to play audio until the page has had a real gesture, so the
    title track starts on the first click/keypress. Try it on load anyway - that
    succeeds for anyone whose browser already trusts the site. */

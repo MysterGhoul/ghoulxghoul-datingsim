@@ -1,6 +1,6 @@
 # Mission: GhoulxGhoul Gets Laid
 
-A browser dating sim. One HTML file, one JS file, an assets folder. No build step, no server code —
+A browser dating sim. One HTML file, three JS files (`game.js` engine + Day 1, `day2.js`, `walk.js` mini game), an assets folder. No build step, no server code —
 upload the folder to any static host and it works.
 
 **Run it locally** (you can't just double-click `index.html`; browsers block local file loading):
@@ -32,8 +32,28 @@ full-screen 16:9 with narration over the top. Skippable.
 
 **4 · Sushi date** — order from the menu, then ten dialog beats.
 
-**5 · Ending** — fade to black → hub-intro sting → `"You win, big boy."` → fade → Yamete Kudasai →
-**YOU WIN** + Play Again.
+**5 · Day 1 payoff** — fade to black → hub-intro sting → `"You win, big boy."` → fade →
+**DAY 2 UNLOCKED** + Continue. (Also drops a "Skip to Day 2" button on the title from then on.)
+
+## Day 2 — the day off
+
+Its own 100-point rizz bar, 70% to win, three hearts.
+
+**6 · Waking up** — Mochi's on your chest. What are we doing today? (10 pts)
+
+**7 · Mochi's Walk** — top-down pixel mini game. WASD moves the two of you, **Space** jumps the
+whole party. Tennis balls +1, fire hydrants +3 (everyone waits 2s while Mochi pees), open
+sewers −1 unless you jump. **3:00 on the clock, 25 points to clear.** Faster = more bar (32 max).
+
+**8 · The second hunt** — same three rooms, four new things: lotion, baby oil, a riding crop
+and a ball gag. **Finding one freezes the clock and opens a "so what's the plan" dialogue** —
+Day 1 rules: a best answer, a good one, one that costs a heart, and one obvious trap (the door hinge).
+58 points across the four.
+
+**9 · The finale** — sting → `"You win, big boy."` → Yamete Kudasai → **YOU WIN** + confetti.
+
+Any Day 2 failure (walk timed out, hunt timed out, out of hearts, under 70%) offers
+**Try Again** (restarts Day 2) or **Give Up** (title).
 
 ### Scoring — the RIZZ METER
 
@@ -64,11 +84,12 @@ Sushi ranking: **Sweetheart Roll 14 → Spicy Tuna 10 → Spicy Salmon 6 → Dra
 ```
 assets/
   bg/      bg_title, bg_room, bg_bedroom, bg_kitchen, bg_stream, bg_sushi   (.jpg)
-  jasmine/ stream_{neutral,happy,annoyed,flirty}.png   <- white shirt, intro + cutscene fallback
+  jasmine/ stream_{neutral,happy,annoyed,flirty,sleepy}.webp   <- white shirt, intro, day 2
            date_{neutral,happy,annoyed,flirty}.png     <- black dress, the date
-  obj/     wig, battery, cable, mug, brush, headset, remote   (.png, cut out)
+  obj/     wig, battery, cable, mug, brush, headset, remote,
+           lotion, oil, crop, gag                          (.png, cut out)
   clip/    stream.mp4      <- the 16:9 stream clip, 21.5s
-  music/   title.mp3, getready.mp3, sushi.mp3          <- seamless loops
+  music/   title, getready, sushi, wake, walk (.mp3)   <- seamless loops
   sfx/     win1_hub.mp3, win2_yamete.mp3
 ```
 

@@ -5,8 +5,8 @@ Until then: https://mysterghoul.github.io/ghoulxghoul-datingsim/
 
 WHAT IT IS
 - "Mission: GhoulxGhoul Gets Laid" - a browser dating sim.
-- Two files of code: index.html (all CSS inline) + game.js (all content + logic).
-  No build step, no framework, no server code.
+- Code: index.html (all CSS inline) + game.js (Day 1 + shared engine) + day2.js (Day 2
+  content + flow) + walk.js (Mochi's Walk pixel mini game). No build step, no framework.
 - Everything else is in assets/.
 
 HOSTING
@@ -41,7 +41,26 @@ TO EDIT + DEPLOY (the whole loop)
 4. git push
 5. Wait ~60-120s, hard-refresh, confirm.
 
-WHERE THE CONTENT LIVES (all plain data at the top of game.js)
+THE TWO DAYS
+- Day 1: intro -> 2:00 hunt (3 rooms, 5 items) -> stream clip -> sushi date -> 70% wins.
+  Winning Day 1 shows "DAY 2 UNLOCKED" + Continue (and sets localStorage gxg_day2=1, which
+  adds a "Skip to Day 2" button on the title so nobody has to replay the date to test Day 2).
+- Day 2 (day off, its own 100-point bar, 70% to win): wake-up dialogue (10) -> Mochi's Walk
+  (32, speed-scaled: 25 pts inside 75s = full) -> second hunt, same rooms, lotion / baby oil /
+  riding crop / ball gag (58). Finding an item FREEZES the hunt clock and opens a "what's the
+  plan" dialogue; Day 1 rules (best / good / heart-loss, one trap: the door hinge).
+  Every Day 2 failure = Try Again (restarts Day 2) / Give Up (title). Day 2 win = the real
+  finale: sting -> "You win, big boy." -> Yamete -> YOU WIN + confetti.
+- Mochi's Walk: WASD/arrows move the couple, SPACE jumps the whole party (airborne you clear
+  sewer holes but can't grab balls). Tennis ball +1, hydrant +3 (everyone waits 2s while Mochi
+  pees), open sewer -1 (floors at 0). 3:00 clock, 25 to clear. Knobs at the top of walk.js:
+  NEED, LIMIT, SCROLL, MOVE, spawn timers in fresh(). Sprites are pixel-map strings (PAL = palette).
+  The dog is drawn from behind so glasses read as the arms at the temples; the front-facing
+  portraits in the HUD are where the glasses + mustache actually show.
+- The hunt engine is config-driven: startHunt(HUNT_D1 | HUNT_D2). A config = rooms, items,
+  intro line, onFound(id, left), onDone, onTimeUp. pauseHunt()/resumeHunt() freeze the clock.
+
+WHERE THE CONTENT LIVES (plain data at the top of game.js / day2.js)
 - INTRO              the opening question
 - ITEMS / DECOYS     what to find, and the joke items
 - ROOMS              which room holds what, x/y are % of the screen
@@ -49,6 +68,7 @@ WHERE THE CONTENT LIVES (all plain data at the top of game.js)
 - ROLLS              the sushi menu
 - DATE               every question on the date
 - MUSIC / SFXFILE    audio paths
+- WAKE / AFTER_WALK / D2_DLG / ROOMS_D2 / ITEMS_D2   (day2.js) everything Day 2 says and hides
 
 A dialog option:
   { t: `What you say`, p: 4, fx: ['SMOOTH','good'], mood: 'happy', r: `What she says back` }
@@ -75,7 +95,8 @@ SPRITES
       o.crop(o.getbbox()).save('out.webp','WEBP',quality=82,method=6)"
 
 AUDIO
-- 3 music loops, one per scene, crossfaded. Each is a true seamless loop (tail
+- 5 music loops (title, pre-stream/hunt, sushi, wake, walk), crossfaded.
+- _music_options/day2.html has the alternates for the two Day 2 tracks. Each is a true seamless loop (tail
   crossfaded into the head) so it does not click on repeat.
 - Browsers refuse audio before a real gesture, so the title track starts on the
   first click or keypress. That is a browser rule, not a bug.
@@ -91,7 +112,10 @@ STILL TO DO
 
 LICENSING
 - Backgrounds: public domain / CC0. Item photos: CC0 or CC BY.
-- Music: title + pre-stream are CC0. Sushi bar is "Guzheng City" by Kevin MacLeod
+- Day 2 items: lotion + baby oil (Flickr, CC BY / PD), riding crop (Commons, CC BY 3.0),
+  ball gag (Commons, CC BY-SA 3.0 - the cut-out sprite inherits BY-SA; it's one image, not the game).
+- Music: title + pre-stream are CC0. Wake = "Morning", walk = "Bit Quest", sushi = "Guzheng City",
+  all by Kevin MacLeod
   (incompetech.com), CC BY 4.0 -> the credit line on the title screen covers it.
   If that track ever changes, check whether the credit line still needs to be there.
 - The stream clip and the two win stings are our own files.
