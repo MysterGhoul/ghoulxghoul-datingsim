@@ -43,7 +43,7 @@ Its own 100-point rizz bar, 70% to win, three hearts.
 
 **7 · Mochi's Walk** — top-down pixel mini game. WASD moves the two of you, **Space** jumps the
 whole party. Tennis balls +1, fire hydrants +3 (everyone waits 2s while Mochi pees), open
-sewers −1 unless you jump. **3:00 on the clock, 25 points to clear.** Faster = more bar (32 max).
+sewers −1 unless you jump. **1:00 on the clock, 30 points to clear.** Faster = more bar (32 max).
 
 **8 · The second hunt** — same three rooms, four new things: lotion, baby oil, a riding crop
 and a ball gag. **Finding one freezes the clock and opens a "so what's the plan" dialogue** —

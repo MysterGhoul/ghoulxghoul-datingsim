@@ -8,7 +8,7 @@
 const DogWalk = (() => {
   const W = 1280, H = 720, SC = 4;                    // canvas + pixel scale
   const ROAD_L = 340, ROAD_R = 940, WALK = 80;        // road x-range, sidewalk width
-  const NEED = 25, LIMIT = 180;                       // points to clear, seconds on the clock
+  const NEED = 30, LIMIT = 60;                        // points to clear, seconds on the clock
   const SCROLL = 200;                                 // px/s the world slides down
   const MOVE = 270;                                   // px/s player speed
   const JUMP_T = 0.55, JUMP_H = 30;

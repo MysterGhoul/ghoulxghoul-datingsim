@@ -46,7 +46,7 @@ THE TWO DAYS
   Winning Day 1 shows "DAY 2 UNLOCKED" + Continue (and sets localStorage gxg_day2=1, which
   adds a "Skip to Day 2" button on the title so nobody has to replay the date to test Day 2).
 - Day 2 (day off, its own 100-point bar, 70% to win): wake-up dialogue (10) -> Mochi's Walk
-  (32, speed-scaled: 25 pts inside 75s = full) -> second hunt, same rooms, lotion / baby oil /
+  (32, speed-scaled: 30 pts inside 30s = full) -> second hunt, same rooms, lotion / baby oil /
   riding crop / ball gag (58). Finding an item FREEZES the hunt clock and opens a "what's the
   plan" dialogue; Day 1 rules (best / good / heart-loss, one trap: the door hinge).
   Every Day 2 failure = Try Again (restarts Day 2) / Give Up (title). Day 2 win = the real
@@ -59,7 +59,7 @@ THE TWO DAYS
 - ?day2 in the URL unlocks the "Skip to Day 2" title button without winning Day 1.
 - Mochi's Walk: WASD/arrows move the couple, SPACE jumps the whole party (airborne you clear
   sewer holes but can't grab balls). Tennis ball +1, hydrant +3 (everyone waits 2s while Mochi
-  pees), open sewer -1 (floors at 0). 3:00 clock, 25 to clear. Knobs at the top of walk.js:
+  pees), open sewer -1 (floors at 0). 1:00 clock, 30 to clear. Knobs at the top of walk.js:
   NEED, LIMIT, SCROLL, MOVE, spawn timers in fresh(). Sprites are pixel-map strings (PAL = palette).
   The dog is drawn from behind so glasses read as the arms at the temples; the front-facing
   portraits in the HUD are where the glasses + mustache actually show.

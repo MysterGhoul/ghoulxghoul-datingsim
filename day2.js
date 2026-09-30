@@ -5,7 +5,7 @@
    Loaded after game.js; uses its helpers (say, renderDialog, startHunt...).
    ============================================================ */
 
-const WALK_MAX = 32, WALK_FULL = 75;         // full marks if 25 points inside 75s
+const WALK_MAX = 32, WALK_FULL = 30;         // full marks if the 30 points land inside 30s
 
 /* ---------- waking up ---------- */
 const WAKE = {
@@ -22,7 +22,7 @@ const WAKE = {
   ]
 };
 const AFTER_WALK = {
-  fast: { mood: 'flirty', say: `Twenty-five. He's out cold on the rug already. So... whole day left, empty apartment,
+  fast: { mood: 'flirty', say: `Thirty. He's out cold on the rug already. So... whole day left, empty apartment,
           and I <em>may</em> have hidden a few things around the place this morning. Go find them.
           Bring me each one and tell me the plan.` },
   slow: { mood: 'happy', say: `That took a while &mdash; he's still wired, but he's home. Empty apartment, whole afternoon.
@@ -153,7 +153,7 @@ async function startWalk() {
     tone, sfx: SFX,
     onDone: async r => {
       if (!r.win) {
-        return failDay2('Mochi Wins.', `Three minutes, <b style="color:#ffd166">${r.score}</b> of 25, and a Jack Russell
+        return failDay2('Mochi Wins.', `One minute, <b style="color:#ffd166">${r.score}</b> of ${DogWalk.NEED}, and a Jack Russell
           who is somehow still not tired. He walked you home, looked at you, and went straight back to the door.`);
       }
       const pts = Math.round(WALK_MAX * walkFactor(r.elapsed));
