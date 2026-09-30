@@ -51,6 +51,12 @@ THE TWO DAYS
   plan" dialogue; Day 1 rules (best / good / heart-loss, one trap: the door hinge).
   Every Day 2 failure = Try Again (restarts Day 2) / Give Up (title). Day 2 win = the real
   finale: sting -> "You win, big boy." -> Yamete -> YOU WIN + confetti.
+- MOBILE: works in landscape (portrait shows a "turn your phone" prompt). Day 1 and the hunts
+  are taps. Mochi's Walk has touch controls: hold a finger and the couple walks toward it
+  (held ~90px above the finger so it isn't covered), and a JUMP button bottom-right. The
+  button appears on any coarse-pointer device or on the first real touch. Text gets small on
+  a phone but stays readable; hunt items are the fiddliest thing to tap.
+- ?day2 in the URL unlocks the "Skip to Day 2" title button without winning Day 1.
 - Mochi's Walk: WASD/arrows move the couple, SPACE jumps the whole party (airborne you clear
   sewer holes but can't grab balls). Tennis ball +1, hydrant +3 (everyone waits 2s while Mochi
   pees), open sewer -1 (floors at 0). 3:00 clock, 25 to clear. Knobs at the top of walk.js:

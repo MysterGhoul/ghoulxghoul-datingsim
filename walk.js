@@ -56,6 +56,7 @@ const DogWalk = (() => {
       dx: 640, dy: 445, pee: 0, peeAt: null,
       objs: [], floats: [], spawn: { ball: .6, hyd: 5, hole: 2.2 }, hydSide: 1,
       keys: {}, hint: 5,
+      touch: null, touchDev: false, jumpFlash: 0,   // touch: drag target while a finger is down
     };
   }
 
@@ -143,7 +144,7 @@ const DogWalk = (() => {
     cx.fillStyle = '#ff8a90'; cx.font = "bold 13px 'Titan One', Impact, sans-serif";
     cx.textAlign = 'left'; cx.fillText("MOCHI'S WALK", 144, 27);
     cx.fillStyle = '#b9b9c4'; cx.font = '600 12px Inter, sans-serif';
-    cx.fillText('WASD move  ·  SPACE jump', 144, 46);
+    cx.fillText(G.touchDev ? 'DRAG to move  ·  tap JUMP' : 'WASD move  ·  SPACE jump', 144, 46);
     // score
     cx.textAlign = 'center';
     cx.fillStyle = G.score >= NEED ? '#5ce08a' : '#fff';
@@ -162,6 +163,15 @@ const DogWalk = (() => {
     cx.fillStyle = '#0d0d10'; cx.beginPath(); cx.ellipse(300, H - 26, 14, 6, 0, 0, Math.PI * 2); cx.fill();
     cx.strokeStyle = '#8a8a92'; cx.lineWidth = 2; cx.stroke();
     cx.fillStyle = '#d0d0d9'; cx.fillText('−1  (jump it)', 322, H - 20);
+    // touch: jump button, bottom-right
+    if (G.touchDev) {
+      const b = JUMP_BTN, on = G.jumpFlash > 0;
+      cx.beginPath(); cx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      cx.fillStyle = on ? 'rgba(229,9,20,.85)' : 'rgba(0,0,0,.45)'; cx.fill();
+      cx.lineWidth = 4; cx.strokeStyle = on ? '#fff' : 'rgba(255,255,255,.75)'; cx.stroke();
+      cx.fillStyle = '#fff'; cx.textAlign = 'center'; cx.font = "bold 22px 'Titan One', Impact, sans-serif";
+      cx.fillText('JUMP', b.x, b.y + 8);
+    }
     // first-seconds hint
     if (G.hint > 0) {
       cx.globalAlpha = Math.min(1, G.hint);
@@ -226,17 +236,23 @@ const DogWalk = (() => {
       G.objs.forEach(o => { o.y += SCROLL * dt; });
       // player
       let mx = 0, my = 0;
-      if (k.a || k.ArrowLeft) mx -= 1; if (k.d || k.ArrowRight) mx += 1;
-      if (k.w || k.ArrowUp) my -= 1; if (k.s || k.ArrowDown) my += 1;
+      if (G.touch) {                                   // steer toward the finger (held a bit above it)
+        const dx = G.touch.x - G.px, dy = (G.touch.y - 90) - G.py, d = Math.hypot(dx, dy);
+        if (d > 10) { mx = dx / d; my = dy / d; }
+      } else {
+        if (k.a || k.ArrowLeft) mx -= 1; if (k.d || k.ArrowRight) mx += 1;
+        if (k.w || k.ArrowUp) my -= 1; if (k.s || k.ArrowDown) my += 1;
+        if (mx || my) { const n = Math.hypot(mx, my); mx /= n; my /= n; }
+      }
       G.moving = mx !== 0 || my !== 0;
-      if (G.moving) { const n = Math.hypot(mx, my); mx /= n; my /= n; }
       G.px = Math.max(ROAD_L - WALK + 44, Math.min(ROAD_R + WALK - 44, G.px + mx * MOVE * dt));
       G.py = Math.max(150, Math.min(660, G.py + my * MOVE * dt));
       G.walkT += dt;
       // jump
       if (G.jump > 0) G.jump -= dt;
-      else if (k[' '] && !G.jumpHeld) { G.jump = JUMP_T; if (opts.tone) opts.tone(700, .06, 'square', .04); }
+      else if (k[' '] && !G.jumpHeld) jumpNow();
       G.jumpHeld = !!k[' '];
+      if (G.jumpFlash > 0) G.jumpFlash -= dt;
       // dog follows on the leash, a little lag so the line swings
       const tx = G.px + Math.sin(G.t * 2.2) * 8, ty = G.py - 74;
       G.dx += (tx - G.dx) * Math.min(1, 7 * dt);
@@ -283,6 +299,31 @@ const DogWalk = (() => {
   }
 
   /* ---------- input ---------- */
+  const JUMP_BTN = { x: W - 118, y: H - 118, r: 66 };
+  function jumpNow() {
+    if (G.jump > 0 || G.pee > 0 || G.done) return;
+    G.jump = JUMP_T; G.jumpFlash = .18;
+    if (opts.tone) opts.tone(700, .06, 'square', .04);
+  }
+  function canvasPos(e) {
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+  }
+  const pDown = e => {
+    if (!active) return;
+    e.preventDefault();
+    if (e.pointerType !== 'mouse') G.touchDev = true;   // show the button once a finger shows up
+    const p = canvasPos(e);
+    if (G.touchDev && Math.hypot(p.x - JUMP_BTN.x, p.y - JUMP_BTN.y) < JUMP_BTN.r + 14) { jumpNow(); return; }
+    G.touch = { x: p.x, y: p.y, id: e.pointerId };
+    try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  };
+  const pMove = e => {
+    if (!active || !G.touch || e.pointerId !== G.touch.id) return;
+    e.preventDefault();
+    const p = canvasPos(e); G.touch.x = p.x; G.touch.y = p.y;
+  };
+  const pUp = e => { if (G.touch && e.pointerId === G.touch.id) G.touch = null; };
   const keyDown = e => {
     if (!active) return;
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -300,11 +341,16 @@ const DogWalk = (() => {
     cv.width = W; cv.height = H; cx.imageSmoothingEnabled = false;
     G = fresh(); active = true; last = performance.now();
     addEventListener('keydown', keyDown); addEventListener('keyup', keyUp);
+    cv.addEventListener('pointerdown', pDown); cv.addEventListener('pointermove', pMove);
+    cv.addEventListener('pointerup', pUp); cv.addEventListener('pointercancel', pUp);
+    try { G.touchDev = matchMedia('(pointer: coarse)').matches; } catch (e) {}
     raf = requestAnimationFrame(loop);
   }
   function stop() {
     active = false; cancelAnimationFrame(raf);
     removeEventListener('keydown', keyDown); removeEventListener('keyup', keyUp);
+    if (cv) { cv.removeEventListener('pointerdown', pDown); cv.removeEventListener('pointermove', pMove);
+      cv.removeEventListener('pointerup', pUp); cv.removeEventListener('pointercancel', pUp); }
   }
   return { start, stop, NEED, LIMIT, get state() { return G; }, _step: dt => { step(dt); render(); } };
 })();
