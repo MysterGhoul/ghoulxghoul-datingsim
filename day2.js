@@ -31,7 +31,7 @@ const AFTER_WALK = {
 
 /* ---------- the second hunt ---------- */
 const ITEMS_D2 = {
-  lotion: { name: 'Lotion',      img: 'assets/obj/lotion.png', w: 44 },
+  lotion: { name: 'Lotion',      img: 'assets/obj/lotion.png', w: 56 },
   oil:    { name: 'Baby oil',    img: 'assets/obj/oil.png',    w: 46 },
   crop:   { name: 'Riding crop', img: 'assets/obj/crop.png',   w: 110 },
   gag:    { name: 'Ball gag',    img: 'assets/obj/gag.png',    w: 66 },
@@ -46,7 +46,7 @@ const ROOMS_D2 = [
     ] },
   { id: 'bed', name: 'Bedroom', bg: 'assets/bg/bg_bedroom.jpg',
     place: [
-      { k: 'lotion',  x:  6.0, y: 72.0, s: 0.95 },
+      { k: 'lotion',  x:  7.0, y: 79.0, s: 0.95 },   // on the nightstand
       { d: 'brush',   x: 88.0, y: 84.0, s: 0.85 },
       { d: 'headset', x: 60.5, y: 62.5, s: 0.80 },
     ] },

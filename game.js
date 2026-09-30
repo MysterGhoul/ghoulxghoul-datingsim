@@ -898,11 +898,12 @@ const TWITCH_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.265
 /* the plug (twitch + tip) under every ending */
 const OUTRO = `
   <div class="outro">
-    <div class="outro-l">She does this <b>live</b>, most nights, for real.<br>
-      Come heckle her in chat &mdash; or throw her a couple of bucks for the trouble.</div>
+    <div class="outro-l">The real Jasmine <b>streams games on Twitch</b> most nights &mdash;
+      with the occasional Mochi cameo. Come say hi in chat.<br>
+      Enjoyed the game? Tips go straight to keeping the stream running.</div>
     <div class="endbtns">
-      <a class="btn tw" href="${TWITCH}" target="_blank" rel="noopener noreferrer">${TWITCH_ICON} Watch Live</a>
-      <a class="btn tip" href="${TIPURL}" target="_blank" rel="noopener noreferrer">&#9829; Leave a Tip</a>
+      <a class="btn tw" href="${TWITCH}" target="_blank" rel="noopener noreferrer">${TWITCH_ICON} Watch the Stream</a>
+      <a class="btn tip" href="${TIPURL}" target="_blank" rel="noopener noreferrer">&#9829; Tip the Stream</a>
     </div>
   </div>`;
 const replayBtns = `<div class="endbtns"><button class="btn" id="againBtn">Play Again</button></div>` + OUTRO;
